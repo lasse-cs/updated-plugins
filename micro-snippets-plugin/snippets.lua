@@ -261,6 +261,29 @@ function Snippet.insert(self)
 	self.modText = false
 end
 
+-- Apply indentation to all lines except the first
+function Snippet.applyIndentation(self, indent)
+	debug1("Snippet.applyIndentation(self, indent)", indent)
+	if indent == "" or indent == nil then
+		return
+	end
+	local lines = {}
+	for line in (self.code .. "\n"):gmatch("(.-)\n") do
+		table.insert(lines, line)
+	end
+	if #lines > 1 then
+		local newCode = lines[1]
+		for i = 2, #lines do
+			newCode = newCode .. "\n" .. indent .. lines[i]
+		end
+		self.code = newCode
+		-- Reset placeholders so they get recalculated with new code
+		self.placeholders = nil
+		self.locations = nil
+		self:Prepare()
+	end
+end
+
 function Snippet.focusNext(self)
 	debug("Snippet.focusNext(self)")
 	if self.focused == nil then
@@ -329,7 +352,11 @@ local function ReadSnippets(filetype)
 				snippets[snipName] = curSnip
 			end
 		else
+			-- Accept snippet body lines prefixed with either a tab (legacy) or 4 spaces.
 			local codeLine = line:match("^\t(.*)$")
+			if codeLine == nil then
+				codeLine = line:match("^    (.*)$")
+			end
 			if codeLine ~= nil then
 				curSnip:AddCodeLine(codeLine)
 			elseif line ~= "" then
@@ -430,6 +457,13 @@ function Insert(bp, args)
 			-- no need to remove snippet keyword from buffer as run from command mode
 			currentSnippet.startPos = xy
 		end
+		-- Detect indentation at insertion point and apply to all snippet lines
+		local insertIndent = ""
+		if currentSnippet.startPos.X > 0 then
+			local line = buf:Line(currentSnippet.startPos.Y)
+			insertIndent = line:match("^([ \t]*)")
+		end
+		currentSnippet:applyIndentation(insertIndent)
 		-- insert snippet to micro buffer
 		currentSnippet:insert()
 		micro.InfoBar():Message("Snippet Inserted \""..snippetName.."\"")
