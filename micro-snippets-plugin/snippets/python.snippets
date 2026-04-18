@@ -6,9 +6,7 @@ snippet #!3
     # -*- coding: utf-8 -*-
 snippet imp
     import ${0:module}
-snippet uni
-    def __unicode__(self):
-        ${0:representation}
+
 snippet from
     from ${1:package} import ${0:module}
 # Module Docstring
@@ -20,6 +18,18 @@ snippet docs
     Github: `g:snips_github`
     Description: ${0}
     """
+
+# f-string
+snippet f
+    f"${0}"
+
+# f-string with expression
+snippet fe
+    f"${1:{placeholder}} = {${2:var}}"
+
+# f-string with formatting
+snippet ff
+    f"${1:{var}:${2:.2f}}"
 
 snippet wh
     while ${1:condition}:
@@ -53,18 +63,7 @@ snippet deff
 snippet defm
     def ${1:mname}(self, ${2:arg}):
         ${0}
-# New Property
-snippet property
-    def ${1:foo}():
-        doc = "${2:The $1 property.}"
-        def fget(self):
-            ${3:return self._$1}
-        def fset(self, value):
-            ${4:self._$1 = value}
-        def fdel(self):
-            ${0:del self._$1}
-        return locals()
-    $1 = property(**$1())
+
 # Ifs
 snippet if
     if ${1:condition}:
@@ -79,13 +78,7 @@ snippet ei
 snippet for
     for ${1:item} in ${2:items}:
         ${0}
-# Encodes
-snippet cutf8
-    # -*- coding: utf-8 -*-
-snippet clatin1
-    # -*- coding: latin-1 -*-
-snippet cascii
-    # -*- coding: ascii -*-
+
 # Lambda
 snippet ld
     ${1:var} = lambda ${2:vars} : ${0:action}
@@ -94,26 +87,26 @@ snippet .
 snippet try Try/Except
     try:
         ${1}
-    except ${2:Exception}, ${3:e}:
+    except ${2:Exception} as ${3:e}:
         ${0:raise $3}
 snippet try Try/Except/Else
     try:
         ${1}
-    except ${2:Exception}, ${3:e}:
+    except ${2:Exception} as ${3:e}:
         ${4:raise $3}
     else:
         ${0}
 snippet try Try/Except/Finally
     try:
         ${1}
-    except ${2:Exception}, ${3:e}:
+    except ${2:Exception} as ${3:e}:
         ${4:raise $3}
     finally:
         ${0}
 snippet try Try/Except/Else/Finally
     try:
         ${1}
-    except ${2:Exception}, ${3:e}:
+    except ${2:Exception} as ${3:e}:
         ${4:raise $3}
     else:
         ${5}
@@ -130,10 +123,7 @@ snippet _
 snippet pdb
     import pdb
     pdb.set_trace()
-# bpython debugger (bpdb)
-snippet bpdb
-    import bpdb
-    bpdb.set_trace()
+
 # ipython debugger (ipdb)
 snippet ipdb
     import ipdb
@@ -142,26 +132,11 @@ snippet ipdb
 snippet iem
     import IPython
     IPython.embed()
-# ipython debugger (pdbbb)
-snippet pdbbb
-    import pdbpp
-    pdbpp.set_trace()
-# remote python debugger (rpdb)
-snippet rpdb
-    import rpdb
-    rpdb.set_trace()
-# ptpython
-snippet ptpython
-    from ptpython.repl import embed
-    embed(globals(), locals(), vi_mode=${1:False}, history_filename=${2:None})
-# python console debugger (pudb)
-snippet pudb
-    import pudb
-    pudb.set_trace()
-# pdb in nosetests
-snippet nosetrace
-    from nose.tools import set_trace
-    set_trace()
+
+
+
+
+
 snippet pprint
     import pprint
     pprint.pprint(${1})
@@ -181,25 +156,8 @@ snippet testcase
 
         def test_${2:description}(self):
             ${0}
-snippet fut
-    from __future__ import ${0}
-#getopt
-snippet getopt
-    try:
-        # Short option syntax: "hv:"
-        # Long option syntax: "help" or "verbose="
-        opts, args = getopt.getopt(sys.argv[1:], "${1:short_options}", [${2:long_options}])
 
-    except getopt.GetoptError, err:
-        # Print debug info
-        print str(err)
-        ${3:error_action}
 
-    for option, argument in opts:
-        if option in ("-h", "--help"):
-            ${0}
-        elif option in ("-v", "--verbose"):
-            verbose = argument
 # logging
 # glog = get log
 snippet glog
@@ -216,20 +174,8 @@ snippet lc
     logger.critical(${0:msg})
 snippet li
     logger.info(${0:msg})
-snippet epydoc
-    """${1:Description}
 
-    @param ${2:param}: ${3: Description}
-    @type  $2: ${4: Type}
 
-    @return: ${5: Description}
-    @rtype : ${6: Type}
-
-    @raise e: ${0: Description}
-    """
-snippet dol
-    def ${1:__init__}(self, *args, **kwargs):
-        super(${0:ClassName}, self).$1(*args, **kwargs)
 snippet kwg
     self.${1:var_name} = kwargs.get('$1', ${2:None})
 snippet lkwg
