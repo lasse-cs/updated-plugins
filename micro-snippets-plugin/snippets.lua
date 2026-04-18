@@ -219,7 +219,6 @@ function Snippet.clone(self)
 	debug("Snippet.clone(self)")
 	local result = Snippet.new()
 	result:AddCodeLine(self.code)
-	result:Prepare()
 	return result
 end
 
@@ -277,10 +276,31 @@ function Snippet.applyIndentation(self, indent)
 			newCode = newCode .. "\n" .. indent .. lines[i]
 		end
 		self.code = newCode
-		-- Reset placeholders so they get recalculated with new code
-		self.placeholders = nil
-		self.locations = nil
-		self:Prepare()
+	end
+end
+
+-- Forward declaration so methods above can call this local function.
+local EvaluateLuaExpression
+
+-- Evaluate Lua expressions (backticks) in placeholder values
+function Snippet.evaluateLuaPlaceholders(self, snippetContext)
+	debug1("Snippet.evaluateLuaPlaceholders", "")
+	if not self.placeholders then
+		return
+	end
+	
+	-- Iterate through placeholders table using pairs (handles any key structure)
+	for num, ph in pairs(self.placeholders) do
+		if ph and type(ph) == "table" and ph.value then
+			-- Check if value is a string before calling match
+			if type(ph.value) == "string" then
+				local backtickMatch = string.match(ph.value, "^`(.*)`$")
+				if backtickMatch then
+					local result = EvaluateLuaExpression(backtickMatch, snippetContext)
+					ph.value = result
+				end
+			end
+		end
 	end
 end
 
@@ -309,7 +329,7 @@ local function CursorWord(bp)
 	local result = ""
 	while x >= 0 do
 		local r = util.RuneStr(c:RuneUnder(x))
-		if (r == " ") then    -- IsWordChar(r) then
+		if string.match(r, "%s") then
 			break
 		else
 			result = r .. result
@@ -318,6 +338,45 @@ local function CursorWord(bp)
 	end
 
 	return result
+end
+
+-- Evaluate Lua code in backticks with snippet context
+EvaluateLuaExpression = function(expr, snippetContext)
+	debug1("EvaluateLuaExpression(expr)", expr)
+	if not expr or expr == "" then
+		return ""
+	end
+	
+	-- Create a safe environment for expression evaluation
+	local env = {
+		indent_level = snippetContext.indent_level or 0,
+		line_content = snippetContext.line_content or "",
+		is_indented = snippetContext.is_indented or false,
+	}
+	
+	-- Try to compile and evaluate the expression.
+	-- Micro commonly runs Lua 5.1, where load expects a reader function.
+	local success, result
+	local func = nil
+	local chunk = "return " .. expr
+
+	if loadstring then
+		func = loadstring(chunk, "snippet_expr")
+		if func and setfenv then
+			setfenv(func, env)
+		end
+	elseif load then
+		func = load(chunk, "snippet_expr", "t", env)
+	end
+
+	if func then
+		success, result = pcall(func)
+	end
+	
+	if success and result ~= nil then
+		return tostring(result)
+	end
+	return ""
 end
 
 local function ReadSnippets(filetype)
@@ -463,7 +522,25 @@ function Insert(bp, args)
 			local line = buf:Line(currentSnippet.startPos.Y)
 			insertIndent = line:match("^([ \t]*)")
 		end
+		
+		-- Apply indentation to raw snippet text before parsing placeholders.
 		currentSnippet:applyIndentation(insertIndent)
+		currentSnippet:Prepare()
+
+		-- Create context for Lua expression evaluation
+		local contextIndentLevel = string.len(insertIndent)
+		if currentSnippet.startPos.X > contextIndentLevel then
+			contextIndentLevel = currentSnippet.startPos.X
+		end
+		local snippetContext = {
+			indent_level = contextIndentLevel,
+			line_content = buf:Line(currentSnippet.startPos.Y),
+			is_indented = (contextIndentLevel > 0),
+		}
+		
+		-- Evaluate Lua expressions in placeholder values
+		currentSnippet:evaluateLuaPlaceholders(snippetContext)
+
 		-- insert snippet to micro buffer
 		currentSnippet:insert()
 		micro.InfoBar():Message("Snippet Inserted \""..snippetName.."\"")
