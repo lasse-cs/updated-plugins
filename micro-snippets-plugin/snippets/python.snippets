@@ -3,7 +3,6 @@ snippet #!
     # -*- coding: utf-8 -*-
 snippet #!3
     #!/usr/bin/env python3
-    # -*- coding: utf-8 -*-
 snippet imp
     import ${0:module}
 
@@ -12,10 +11,10 @@ snippet from
 # Module Docstring
 snippet docs
     """
-    File: ${1:`vim_snippets#Filename('$1.py', 'foo.py')`}
-    Author: `g:snips_author`
-    Email: `g:snips_email`
-    Github: `g:snips_github`
+    File: ${1:`filename('$1.py', 'foo.py')`}
+    Author: ${2:Author Name}
+    Email: ${3:email@example.com}
+    Github: ${4:github.com/username}
     Description: ${0}
     """
 
@@ -40,7 +39,7 @@ snippet cl
     class ${1:ClassName}(${2:object}):
         """${3:docstring for $1}"""
         def __init__(self, ${4:arg}):
-            ${5:super($1, self).__init__()}
+            ${5:super().__init__()}
             self.$4 = $4
             ${0}
 # New Function
@@ -129,8 +128,7 @@ snippet _
     __${1:init}__
 # python debugger (pdb)
 snippet pdb
-    import pdb
-    pdb.set_trace()
+    breakpoint()
 
 # ipython debugger (ipdb)
 snippet ipdb
@@ -140,10 +138,6 @@ snippet ipdb
 snippet iem
     import IPython
     IPython.embed()
-
-
-
-
 
 snippet pprint
     import pprint

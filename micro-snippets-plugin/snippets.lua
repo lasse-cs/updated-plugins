@@ -17,6 +17,207 @@ Location.__index = Location
 local Snippet = {}
 Snippet.__index = Snippet
 
+local function SnippetPlaceholderValue(snippet, num)
+	if snippet == nil or snippet.placeholders == nil then
+		return ""
+	end
+	for i = 1, #snippet.placeholders do
+		local ph = snippet.placeholders[i]
+		if ph and ph.num == num and ph.value ~= nil then
+			return tostring(ph.value)
+		end
+	end
+	return ""
+end
+
+local function InterpolatePlaceholderRefs(text, snippet)
+	if text == nil then
+		return ""
+	end
+	local result = tostring(text)
+	result = result:gsub("%$(%d+)", function(n)
+		return SnippetPlaceholderValue(snippet, tonumber(n))
+	end)
+	return result
+end
+
+local function GetBufferPathParts(snippetContext)
+	local buf = nil
+	if snippetContext then
+		buf = snippetContext.buf
+		if buf == nil and snippetContext.snippet and snippetContext.snippet.view then
+			buf = snippetContext.snippet.view.Buf
+		end
+	end
+
+	local path = ""
+	if buf and buf.Path then
+		path = tostring(buf.Path)
+	end
+
+	local fileName = path:match("([^/\\]+)$") or ""
+	local stem = fileName:gsub("%.[^%.]+$", "")
+	return path, fileName, stem
+end
+
+local function SnippetFilename(defaultTemplate, fallback, snippetContext)
+	local _, _, stem = GetBufferPathParts(snippetContext)
+	local base = stem
+	if base == "" and fallback and fallback ~= "" then
+		base = fallback
+	end
+
+	if defaultTemplate and defaultTemplate ~= "" then
+		local templ = tostring(defaultTemplate):gsub("%$1", base)
+		return InterpolatePlaceholderRefs(templ, snippetContext and snippetContext.snippet)
+	end
+
+	if base ~= "" then
+		return base
+	end
+
+	if fallback then
+		return fallback
+	end
+
+	return ""
+end
+
+local function UpperFirst(s)
+	if s == nil or s == "" then
+		return ""
+	end
+	return (s:gsub("^%l", string.upper))
+end
+
+local function SnakeToPascal(s)
+	if s == nil or s == "" then
+		return ""
+	end
+	local result = tostring(s)
+	result = result:gsub("[_-]+(%w)", function(c)
+		return string.upper(c)
+	end)
+	result = result:gsub("^(%w)", function(c)
+		return string.upper(c)
+	end)
+	return result
+end
+
+local function StripSuffix(s, suffix)
+	if s == nil then
+		return ""
+	end
+	local value = tostring(s)
+	if suffix == nil or suffix == "" then
+		return value
+	end
+	local idx = value:match("()" .. suffix .. "$")
+	if idx then
+		return value:sub(1, idx - 1)
+	end
+	return value
+end
+
+local function BufferDir(snippetContext)
+	local fullPath = (GetBufferPathParts(snippetContext))
+	return fullPath:match("^(.*)[/\\][^/\\]+$") or ""
+end
+
+local function RelativePathAfter(dirPath, marker)
+	if dirPath == nil or dirPath == "" then
+		return ""
+	end
+	local normalized = tostring(dirPath):gsub("\\", "/")
+	local pos = normalized:find("/" .. marker .. "/", 1, true)
+	if not pos then
+		if normalized:sub(1, #marker + 1) == marker .. "/" then
+			return normalized:sub(#marker + 2)
+		end
+		return ""
+	end
+	return normalized:sub(pos + #marker + 2)
+end
+
+local function ToModulePath(value, separator)
+	if value == nil then
+		return ""
+	end
+	separator = separator or "."
+	local v = tostring(value):gsub("\\", "/")
+	v = v:gsub("^/+", "")
+	v = v:gsub("/+$", "")
+	v = v:gsub("%.[^/%.]+$", "")
+	v = v:gsub("/", separator)
+	return v
+end
+
+local function SnipsAuthor()
+	return os.getenv("SNIPS_AUTHOR") or ""
+end
+
+local function SnipsEmail()
+	return os.getenv("SNIPS_EMAIL") or ""
+end
+
+local function NowDate(format)
+	if format == nil or format == "" then
+		return os.date()
+	end
+	return os.date(format)
+end
+
+local function ClipboardValue()
+	-- micro snippet API does not expose clipboard registers here.
+	return ""
+end
+
+local function BufferModulePath(snippetContext, separator)
+	local _, _, stem = GetBufferPathParts(snippetContext)
+	return ToModulePath(stem, separator)
+end
+
+local function PerlPackageName(snippetContext)
+	local path = (GetBufferPathParts(snippetContext))
+	local normalized = tostring(path):gsub("\\", "/")
+	local startPos = normalized:find("/lib/", 1, true)
+	if startPos then
+		local rel = normalized:sub(startPos + 5)
+		return ToModulePath(rel, "::")
+	end
+	return ToModulePath(normalized, "::")
+end
+
+local function PuppetModuleName(snippetContext)
+	local dir = BufferDir(snippetContext)
+	local rel = RelativePathAfter(dir, "modules")
+	if rel == "" then
+		return "name"
+	end
+	local mod = rel:gsub("/manifests.*$", "")
+	mod = ToModulePath(mod, "::")
+	if mod == "" then
+		return "name"
+	end
+	return mod
+end
+
+local function PuppetDefineName(snippetContext)
+	local path = (GetBufferPathParts(snippetContext))
+	local normalized = tostring(path):gsub("\\", "/")
+	local startPos = normalized:find("/modules/", 1, true)
+	if not startPos then
+		return "name"
+	end
+	local rel = normalized:sub(startPos + 9)
+	rel = rel:gsub("/manifests/", "::")
+	rel = rel:gsub("%.pp$", "")
+	if rel == "" then
+		return "name"
+	end
+	return rel
+end
+
 -- Snippets
 --      --> Snippet
 --                --> Location
@@ -346,12 +547,36 @@ EvaluateLuaExpression = function(expr, snippetContext)
 	if not expr or expr == "" then
 		return ""
 	end
+	snippetContext = snippetContext or {}
 	
 	-- Create a safe environment for expression evaluation
 	local env = {
 		indent_level = snippetContext.indent_level or 0,
 		line_content = snippetContext.line_content or "",
 		is_indented = snippetContext.is_indented or false,
+		filename = function(defaultTemplate, fallback)
+			return SnippetFilename(defaultTemplate, fallback, snippetContext)
+		end,
+		capitalize = UpperFirst,
+		pascal_case = SnakeToPascal,
+		upper = string.upper,
+		strip_suffix = StripSuffix,
+		author = SnipsAuthor,
+		email = SnipsEmail,
+		now = NowDate,
+		clipboard = ClipboardValue,
+		module_path = function(separator)
+			return BufferModulePath(snippetContext, separator)
+		end,
+		perl_package = function()
+			return PerlPackageName(snippetContext)
+		end,
+		puppet_module = function()
+			return PuppetModuleName(snippetContext)
+		end,
+		puppet_define = function()
+			return PuppetDefineName(snippetContext)
+		end,
 	}
 	
 	-- Try to compile and evaluate the expression.
@@ -536,6 +761,8 @@ function Insert(bp, args)
 			indent_level = contextIndentLevel,
 			line_content = buf:Line(currentSnippet.startPos.Y),
 			is_indented = (contextIndentLevel > 0),
+			snippet = currentSnippet,
+			buf = buf,
 		}
 		
 		-- Evaluate Lua expressions in placeholder values
