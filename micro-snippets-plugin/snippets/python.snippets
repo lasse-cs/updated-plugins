@@ -20,16 +20,8 @@ snippet docs
     """
 
 # f-string
-snippet fstr
+snippet f
     f"${0}"
-
-# f-string with expression
-snippet fstrexpr
-    f"${1:{placeholder}} = {${2:var}}"
-
-# f-string with formatting
-snippet fstrfmt
-    f"${1:{var}:${2:.2f}}"
 
 snippet wh
     while ${1:condition}:
@@ -86,6 +78,9 @@ snippet match
     match ${1:value}:
         case ${2:pattern}:
             ${0}
+snippet case
+    case ${1:pattern}:
+        ${0}
 
 # For
 snippet for
