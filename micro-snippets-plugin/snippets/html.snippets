@@ -889,3 +889,41 @@ snippet video
     <video src="${1}" width="${2}" height="${3}" controls preload="${4:metadata}">${0}</video>
 snippet wbr
     <wbr />
+
+# Django Snippets
+snippet djt
+    {% ${1} %}
+snippet djstatic
+    {% static '${1:path/to/file}' %}
+snippet djv
+    {{ ${1} }}
+snippet djif
+    {% if ${1:condition} %}
+        ${0}
+    {% endif %}
+snippet djifelse
+    {% if ${1:condition} %}
+        ${2}
+    {% else %}
+        ${0}
+    {% endif %}
+snippet djfor
+    {% for ${1:item} in ${2:items} %}
+        ${0}
+    {% endfor %}
+snippet djwith
+    {% with ${1:var}=${2:value} %}
+        ${0}
+    {% endwith %}
+snippet djblock
+    {% block ${1:name} %}
+        ${0}
+    {% endblock %}
+snippet djextends
+    {% extends '${1:base.html}' %}
+snippet djload
+    {% load ${1:static} %}
+snippet djurl
+    {% url '${1:view_name}' ${0} %}
+snippet djcsrf
+    {% csrf_token %}
