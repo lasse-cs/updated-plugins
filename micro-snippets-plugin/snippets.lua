@@ -528,9 +528,17 @@ local function CursorWord(bp)
 	local c = bp.Cursor
 	local x = c.X-1 -- start one rune before the cursor
 	local result = ""
+	local function IsSnippetWordBreak(r)
+		return string.match(r, "%s") ~= nil
+			or r == ","
+			or r == '"'
+			or r == "'"
+			or r == "<"
+			or r == ">"
+	end
 	while x >= 0 do
 		local r = util.RuneStr(c:RuneUnder(x))
-		if string.match(r, "%s") then
+		if IsSnippetWordBreak(r) then
 			break
 		else
 			result = r .. result
