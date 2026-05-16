@@ -894,7 +894,7 @@ snippet wbr
 snippet djt
     {% ${1} %}
 snippet djstatic
-    {% static '${1:path/to/file}' %}
+    {% static "${1:path/to/file}" %}
 snippet djv
     {{ ${1} }}
 snippet djif
@@ -920,10 +920,10 @@ snippet djblock
         ${0}
     {% endblock %}
 snippet djextends
-    {% extends '${1:base.html}' %}
+    {% extends "${1:base.html}" %}
 snippet djload
     {% load ${1:static} %}
 snippet djurl
-    {% url '${1:view_name}' ${0} %}
+    {% url "${1:view_name}" ${0} %}
 snippet djcsrf
     {% csrf_token %}
