@@ -27,7 +27,11 @@ The snippet files have a very simple syntax:
 * a line starts with `snippet` starts a new snippet.
 * after `snippet` you can add one or more shortcuts for the snippets,
   like `snippet aFunc bFunc` (at least one shortcut is required)
-* every line of code within the snippet must start with a tab (`\t`)
+* every line of code within the snippet must start with a literal tab (`\t`).
+  This first tab marks a body line and is removed when loading the snippet.
+* each additional leading tab represents one indentation level. Expansion uses
+  the buffer's `tabsize` and `tabstospaces` settings and preserves the indentation
+  where you insert the snippet. Spaces and non-leading tabs remain literal.
 * a snippet can have multiple placeholders which are indicated by `
   ${num[:name]}` where num is a numeric value. Placeholders with the
   same number share the same value. You also have the option to give
@@ -36,14 +40,12 @@ The snippet files have a very simple syntax:
 Plugins can provide snippet files they just need to publish them as a runtime file with type `snippets`.
 See the plugins help for additional details.
 
-Sample for go:
+Sample for Python (the body lines below begin with literal tabs):
 
-```go
-# creates a function that prints a value
-snippet fmtfunc
-    func ${0:name}() {
-         fmt.Println("${0} prints:", ${1:value})
-    }
+```text
+snippet if
+	if ${1:condition}:
+		${2:pass}
 ```
 
 ## Custom Key Bindings

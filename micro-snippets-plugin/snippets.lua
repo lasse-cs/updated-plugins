@@ -309,6 +309,8 @@ function Location.focus(self)
 	else
 		view.Cursor:ResetSelection()
 	end
+	-- Cursor movement alone does not scroll the pane for plugin actions.
+	view:Relocate()
 end
 
 function Location.handleInput(self, ev)
@@ -461,17 +463,21 @@ function Snippet.insert(self)
 	self.modText = false
 end
 
--- Apply indentation to all lines except the first
-function Snippet.applyIndentation(self, indent)
+-- Render relative tabs using the buffer's indent unit, then add base indentation.
+function Snippet.applyIndentation(self, indent, indentUnit)
 	debug1("Snippet.applyIndentation(self, indent)", indent)
-	if indent == "" or indent == nil then
+	if self.code == "" then
 		return
 	end
+	indent = indent or ""
+	indentUnit = indentUnit or "    "
 	local lines = {}
 	for line in (self.code .. "\n"):gmatch("(.-)\n") do
-		table.insert(lines, line)
+		-- Only leading tabs are indentation; literal spaces stay untouched.
+		local tabs = line:match("^\t*")
+		table.insert(lines, string.rep(indentUnit, #tabs) .. line:sub(#tabs + 1))
 	end
-	if #lines > 1 then
+	if #lines > 0 then
 		local newCode = lines[1]
 		for i = 2, #lines do
 			newCode = newCode .. "\n" .. indent .. lines[i]
@@ -644,11 +650,8 @@ local function ReadSnippets(filetype)
 				snippets[snipName] = curSnip
 			end
 		else
-			-- Accept snippet body lines prefixed with either a tab (legacy) or 4 spaces.
+			-- The first tab marks a body line; subsequent tabs are indentation.
 			local codeLine = line:match("^\t(.*)$")
-			if codeLine == nil then
-				codeLine = line:match("^    (.*)$")
-			end
 			if codeLine ~= nil then
 				curSnip:AddCodeLine(codeLine)
 			elseif line ~= "" then
@@ -757,7 +760,13 @@ function Insert(bp, args)
 		end
 		
 		-- Apply indentation to raw snippet text before parsing placeholders.
-		currentSnippet:applyIndentation(insertIndent)
+		local tabsize = tonumber(buf.Settings["tabsize"]) or 4
+		tabsize = math.max(1, math.floor(tabsize))
+		local indentUnit = "\t"
+		if buf.Settings["tabstospaces"] then
+			indentUnit = string.rep(" ", tabsize)
+		end
+		currentSnippet:applyIndentation(insertIndent, indentUnit)
 		currentSnippet:Prepare()
 
 		-- Create context for Lua expression evaluation
