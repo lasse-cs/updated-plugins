@@ -1,190 +1,265 @@
+# Python 3 essentials. Placeholder numbers follow editing order, starting at 1.
+# This plugin cycles through placeholders; zero is not a special final stop.
+
+# Imports and module setup
 snippet #!
-    #!/usr/bin/env python
-    # -*- coding: utf-8 -*-
-snippet #!3
-    #!/usr/bin/env python3
+	#!/usr/bin/env python3
 snippet imp
-    import ${0:module}
-
+	import ${1:module}
 snippet from
-    from ${1:package} import ${0:module}
-# Module Docstring
+	from ${1:package} import ${2:name}
 snippet docs
-    """
-    File: ${1:`filename('$1.py', 'foo.py')`}
-    Author: ${2:Author Name}
-    Email: ${3:email@example.com}
-    Github: ${4:github.com/username}
-    Description: ${0}
-    """
-
-# f-string
-snippet f
-    f"${0}"
-
-snippet wh
-    while ${1:condition}:
-        ${0}
-# dowh - does the same as do...while in other languages
-snippet dowh
-    while True:
-        ${1}
-        if ${0:condition}:
-            break
-snippet with
-    with ${1:expr} as ${2:var}:
-        ${0}
-# New Class
-snippet cl
-    class ${1:ClassName}(${2:object}):
-        """${3:docstring for $1}"""
-        def __init__(self, ${4:arg}):
-            ${5:super().__init__()}
-            self.$4 = $4
-            ${0}
-# New Function
-snippet def
-    def ${1:fname}(${2:`is_indented and 'self' or ''`}):
-        """${3:docstring for $1}"""
-        ${0}
-snippet deff
-    def ${1:fname}(${2:`is_indented and 'self' or ''`}):
-        ${0}
-# New Method
-snippet defm
-    def ${1:mname}(self, ${2:arg}):
-        ${0}
-
-# String formatting
-snippet str
-    "${0}"
-snippet strfmt
-    "${1:value}:{${2:.2f}}"
-
-# Ifs
-snippet if
-    if ${1:condition}:
-        ${0}
-snippet el
-    else:
-        ${0}
-snippet ei
-    elif ${1:condition}:
-        ${0}
-
-# Match/Case
-snippet match
-    match ${1:value}:
-        case ${2:pattern}:
-            ${0}
-snippet case
-    case ${1:pattern}:
-        ${0}
-
-# For
-snippet for
-    for ${1:item} in ${2:items}:
-        ${0}
-
-# Lambda
-snippet ld
-    ${1:var} = lambda ${2:vars} : ${0:action}
-snippet .
-    self.
-snippet try Try/Except
-    try:
-        ${1}
-    except ${2:Exception} as ${3:e}:
-        ${0:raise $3}
-snippet try Try/Except/Else
-    try:
-        ${1}
-    except ${2:Exception} as ${3:e}:
-        ${4:raise $3}
-    else:
-        ${0}
-snippet try Try/Except/Finally
-    try:
-        ${1}
-    except ${2:Exception} as ${3:e}:
-        ${4:raise $3}
-    finally:
-        ${0}
-snippet try Try/Except/Else/Finally
-    try:
-        ${1}
-    except ${2:Exception} as ${3:e}:
-        ${4:raise $3}
-    else:
-        ${5}
-    finally:
-        ${0}
-# if __name__ == '__main__':
+	"""${1:Describe this module's purpose.}"""
 snippet ifmain
-    if __name__ == '__main__':
-        ${0:main()}
-# __magic__
-snippet _
-    __${1:init}__
-# python debugger (pdb)
+	if __name__ == "__main__":
+		${1:main()}
+
+# Functions and classes: explicit methods, no indentation-based self guessing.
+snippet def
+	def ${1:function_name}(${2}):
+		${3:pass}
+snippet defm
+	def ${1:method_name}(self${2}):
+		${3:pass}
+snippet init
+	def __init__(self${1}):
+		${2:pass}
+snippet cl
+	class ${1:ClassName}:
+		${2:pass}
+snippet doc
+	"""${1:Describe the purpose.}"""
+# Method/constructor argument placeholders include the leading comma, if needed.
+
+# Strings
+snippet f
+	f"{${1:expression}}"
+snippet strfmt
+	f"{${1:value}:${2:.2f}}"
+
+# Control flow
+snippet if
+	if ${1:condition}:
+		${2:pass}
+snippet el
+	else:
+		${1:pass}
+snippet ei
+	elif ${1:condition}:
+		${2:pass}
+snippet for
+	for ${1:item} in ${2:items}:
+		${3:pass}
+snippet wh
+	while ${1:condition}:
+		${2:pass}
+snippet with
+	with ${1:expression} as ${2:value}:
+		${3:pass}
+snippet match
+	match ${1:value}:
+		case ${2:pattern}:
+			${3:pass}
+snippet case
+	case ${1:pattern}:
+		${2:pass}
+
+# Exceptions: choose a specific exception; bare raise preserves the traceback.
+snippet try
+	try:
+		${1:pass}
+	except ${2:ValueError} as ${3:exc}:
+		${4:raise}
+snippet tryelse
+	try:
+		${1:pass}
+	except ${2:ValueError} as ${3:exc}:
+		${4:raise}
+	else:
+		${5:pass}
+snippet tryfinally
+	try:
+		${1:pass}
+	finally:
+		${2:pass}
+
+# Debugging
 snippet pdb
-    breakpoint()
-
-# ipython debugger (ipdb)
-snippet ipdb
-    import ipdb
-    ipdb.set_trace()
-# embed ipython itself
-snippet iem
-    import IPython
-    IPython.embed()
-
+	breakpoint()
 snippet pprint
-    import pprint
-    pprint.pprint(${1})
-snippet "
-    """${0:doc}
-    """
-# assertions
-snippet a=
-    self.assertEqual(${0}, ${1})
-# test function/method
+	from pprint import pprint
+	pprint(${1:value})
+
+# Tests (plain assertions work with pytest)
 snippet test
-    def test_${1:description}(${2:`is_indented and 'self' or ''`}):
-        ${0}
-# test case
-snippet testcase
-    class ${1:ExampleCase}(unittest.TestCase):
+	def test_${1:behavior}(${2}):
+		${3:pass}
+snippet assert
+	assert ${1:actual} == ${2:expected}
 
-        def test_${2:description}(self):
-            ${0}
-
-
-# logging
-# glog = get log
+# Logging: use %-style arguments for deferred formatting.
 snippet glog
-    import logging
-    logger = logging.getLogger(${0:__name__})
+	import logging
+	logger = logging.getLogger(__name__)
 snippet le
-    logger.error(${0:msg})
-# conflict with lambda=ld, therefor we change into Logger.debuG
+	logger.error("${1:message}"${2})
 snippet lg
-    logger.debug(${0:msg})
+	logger.debug("${1:message}"${2})
 snippet lw
-    logger.warning(${0:msg})
-snippet lc
-    logger.critical(${0:msg})
+	logger.warning("${1:message}"${2})
 snippet li
-    logger.info(${0:msg})
+	logger.info("${1:message}"${2})
+# Use inside an exception handler to include the traceback.
+snippet lex
+	logger.exception("${1:message}"${2})
 
+# Django: import models from django.db in model modules.
+snippet djmodel
+	class ${1:Product}(models.Model):
+		name = models.CharField(max_length=255)
+		def __str__(self):
+			return self.name
+snippet djchar
+	${1:name} = models.CharField(max_length=${2:255})
+snippet djtext
+	${1:description} = models.TextField(blank=True)
+snippet djbool
+	${1:is_active} = models.BooleanField(default=${2:True})
+snippet djdecimal
+	${1:price} = models.DecimalField(max_digits=${2:10}, decimal_places=${3:2})
+snippet djfk
+	${1:category} = models.ForeignKey("${2:catalog.Category}", on_delete=models.${3:PROTECT}, related_name="${4:products}")
+# Requires: from django.conf import settings
+snippet djuser
+	${1:owner} = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.${2:CASCADE}, related_name="${3:products}")
+snippet djm2m
+	${1:tags} = models.ManyToManyField("${2:catalog.Tag}", related_name="${3:products}", blank=True)
+snippet djcreated
+	${1:created_at} = models.DateTimeField(auto_now_add=True)
+snippet djupdated
+	${1:updated_at} = models.DateTimeField(auto_now=True)
+# Insert constraint/index entries inside Meta.constraints / Meta.indexes lists.
+snippet djunique
+	models.UniqueConstraint(fields=[${1:"owner", "name"}], name="${2:unique_product_owner_name}"),
+snippet djindex
+	models.Index(fields=[${1:"created_at"}], name="${2:product_created_idx}"),
+# Requires: from django.contrib import admin; import your model.
+snippet djadmin
+	@admin.register(${1:Product})
+	class ${2:ProductAdmin}(admin.ModelAdmin):
+		list_display = (${3:"id", "name"},)
+		search_fields = (${4:"name"},)
+		list_filter = (${5:"created_at"},)
+# Requires: from django.urls import path; import your view.
+snippet djpath
+	path("${1:products/}", ${2:views.product_list}, name="${3:product-list}"),
+snippet djpathclass
+	path("${1:products/}", ${2:ProductListView}.as_view(), name="${3:product-list}"),
+# Requires: from django.shortcuts import get_object_or_404
+snippet dj404
+	${1:product} = get_object_or_404(${2:Product}, pk=${3:pk})
+# Requires: from django.db import transaction
+snippet djatomic
+	with transaction.atomic():
+		${1:pass}
+snippet djcommit
+	transaction.on_commit(lambda: ${1:send_notification(product.pk)})
+# Append to a queryset; select_related for FK/one-to-one, prefetch for collections.
+# Expand separately and join, or use the command: snippetinsert djselect/djprefetch.
+snippet djselect
+	.select_related("${1:owner}")
+snippet djprefetch
+	.prefetch_related("${1:tags}")
+# Management command module: place in your app's management/commands/ directory.
+snippet djcmd
+	from django.core.management.base import BaseCommand
+	class Command(BaseCommand):
+		help = "${1:Describe this command.}"
+		def handle(self, *args, **options):
+			${2:self.stdout.write(self.style.SUCCESS("Done"))}
+# Requires pytest-django and configured DJANGO_SETTINGS_MODULE.
+snippet djtest
+	@pytest.mark.django_db
+	def test_${1:behavior}(${2}):
+		${3:pass}
 
-snippet kwg
-    self.${1:var_name} = kwargs.get('$1', ${2:None})
-snippet lkwg
-    ${1:var_name} = kwargs.get('$1', ${2:None})
-snippet args
-    *args${1:,}${0}
-snippet kwargs
-    **kwargs${1:,}${0}
-snippet akw
-    *args, **kwargs${1:,}${0}
+# DRF: import serializers, viewsets, permissions, status from rest_framework
+# as needed; import Response from rest_framework.response.
+# Serializer fields are explicit; add only fields this API should expose.
+snippet drser
+	class ${1:ProductSerializer}(serializers.ModelSerializer):
+		class Meta:
+			model = ${2:Product}
+			fields = [${3:"id", "name"}]
+			read_only_fields = [${4:"id"}]
+snippet drplain
+	class ${1:InputSerializer}(serializers.Serializer):
+		${2:name} = serializers.CharField(max_length=${3:255})
+snippet drvalidate
+	def validate_${1:price}(self, value):
+		if ${2:value < 0}:
+			raise serializers.ValidationError("${3:Must be non-negative.}")
+		return value
+snippet drvalidateall
+	def validate(self, attrs):
+		if ${1:attrs["end"] < attrs["start"]}:
+			raise serializers.ValidationError("${2:End must be after start.}")
+		return attrs
+# Querysets here expose all rows to authenticated users; scope to your app's rules.
+snippet drviewset
+	class ${1:ProductViewSet}(viewsets.ModelViewSet):
+		queryset = ${2:Product}.objects.all()
+		serializer_class = ${3:ProductSerializer}
+		permission_classes = [permissions.IsAuthenticated]
+snippet drreadonly
+	class ${1:ProductViewSet}(viewsets.ReadOnlyModelViewSet):
+		queryset = ${2:Product}.objects.all()
+		serializer_class = ${3:ProductSerializer}
+		permission_classes = [permissions.IsAuthenticated]
+# Requires: from rest_framework.views import APIView
+snippet drapi
+	class ${1:ProductView}(APIView):
+		permission_classes = [permissions.IsAuthenticated]
+		def get(self, request, *args, **kwargs):
+			${2:return Response([])}
+# Requires: from rest_framework.decorators import action
+snippet draction
+	@action(detail=${1:True}, methods=["${2:post}"])
+	def ${3:publish}(self, request, *args, **kwargs):
+		${4:return Response(status=status.HTTP_204_NO_CONTENT)}
+# Use on views with IsAuthenticated; change owner to your ownership field.
+snippet druserqs
+	def get_queryset(self):
+		return super().get_queryset().filter(${1:owner}=self.request.user)
+snippet drcreate
+	def perform_create(self, serializer):
+		serializer.save(${1:owner}=self.request.user)
+# Make owner read-only or omit it from writable serializer fields with drcreate.
+snippet drresponse
+	return Response(${1:data}, status=status.${2:HTTP_200_OK})
+snippet drerror
+	raise serializers.ValidationError("${1:Invalid value.}")
+# Object permissions apply to detail lookups; separately scope list querysets.
+snippet drperm
+	class ${1:IsOwner}(permissions.BasePermission):
+		def has_object_permission(self, request, view, obj):
+			return obj.${2:owner_id} == request.user.pk
+# Requires: from rest_framework.routers import DefaultRouter; import your viewset.
+# Include with path("api/", include(router.urls)) in urlpatterns.
+snippet drrouter
+	router = DefaultRouter()
+	router.register("${1:products}", ${2:ProductViewSet}, basename="${3:product}")
+# Requires: import pytest; from rest_framework.test import APIClient
+snippet drclient
+	@pytest.fixture
+	def api_client():
+		return APIClient()
+# Requires pytest-django, the api_client fixture, reverse, and status imports.
+# This example tests an unauthenticated GET; authenticate for protected endpoints.
+snippet drtest
+	@pytest.mark.django_db
+	def test_${1:list_products}(api_client):
+		response = api_client.get(reverse("${2:product-list}"))
+		assert response.status_code == status.${3:HTTP_200_OK}
+snippet drauth
+	api_client.force_authenticate(user=${1:user})
